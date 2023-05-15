@@ -38,4 +38,4 @@ thermo 10
 #fix		1 all nve
 fix 1 all npt temp ${myT} ${myT} 10.0 iso ${myP} ${myP} 100.0
 
-run		100000
+run		10

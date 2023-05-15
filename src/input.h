@@ -17,6 +17,7 @@
 #include "pointers.h"
 
 #include <map>
+#include <iostream>
 
 namespace LAMMPS_NS {
 class Command;
@@ -142,6 +143,7 @@ class Input : protected Pointers {
   void undump();
   void unfix();
   void units();
+  //void qtcorpot();
 };
 
 }    // namespace LAMMPS_NS

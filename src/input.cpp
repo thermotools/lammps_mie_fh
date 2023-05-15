@@ -10,7 +10,7 @@
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 #include "input.h"
 
@@ -58,7 +58,7 @@ using namespace LAMMPS_NS;
 
 /* ----------------------------------------------------------------------
    one instance per command in style_command.h
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 template <typename T> static Command *command_creator(LAMMPS *lmp)
 {
@@ -70,29 +70,29 @@ template <typename T> static Command *command_creator(LAMMPS *lmp)
 /** \class LAMMPS_NS::Input
  *  \brief Class for processing commands and input files
  *
-\verbatim embed:rst
+ \verbatim embed:rst
 
-The Input class contains methods for reading, pre-processing and
-parsing LAMMPS commands and input files and will dispatch commands
-to the respective class instances or contains the code to execute
-the commands directly.  It also contains the instance of the
-Variable class which performs computations and text substitutions.
+ The Input class contains methods for reading, pre-processing and
+ parsing LAMMPS commands and input files and will dispatch commands
+ to the respective class instances or contains the code to execute
+ the commands directly.  It also contains the instance of the
+ Variable class which performs computations and text substitutions.
 
-\endverbatim */
+ \endverbatim */
 
 /** Input class constructor
  *
-\verbatim embed:rst
+ \verbatim embed:rst
 
-This sets up the input processing, processes the *-var* and *-echo*
-command line flags, holds the factory of commands and creates and
-initializes an instance of the Variable class.
+ This sets up the input processing, processes the *-var* and *-echo*
+ command line flags, holds the factory of commands and creates and
+ initializes an instance of the Variable class.
 
-To execute a command, a specific class instance, derived from
-:cpp:class:`Command`, is created, then its ``command()`` member
-function executed, and finally the class instance is deleted.
+ To execute a command, a specific class instance, derived from
+ :cpp:class:`Command`, is created, then its ``command()`` member
+ function executed, and finally the class instance is deleted.
 
-\endverbatim
+ \endverbatim
  *
  * \param  lmp   pointer to the base LAMMPS class
  * \param  argc  number of entries in *argv*
@@ -129,7 +129,7 @@ Input::Input(LAMMPS *lmp, int argc, char **argv) : Pointers(lmp)
   command_map = new CommandCreatorMap();
 
 #define COMMAND_CLASS
-#define CommandStyle(key,Class) \
+#define CommandStyle(key,Class)				\
   (*command_map)[#key] = &command_creator<Class>;
 #include "style_command.h"      // IWYU pragma: keep
 #undef CommandStyle
@@ -154,7 +154,7 @@ Input::Input(LAMMPS *lmp, int argc, char **argv) : Pointers(lmp)
       echo();
       arg = tmp;
       iarg += 2;
-     } else iarg++;
+    } else iarg++;
   }
 }
 
@@ -178,13 +178,13 @@ Input::~Input()
 
 /** Process all input from the ``FILE *`` pointer *infile*
  *
-\verbatim embed:rst
+ \verbatim embed:rst
 
-This will read lines from *infile*, parse and execute them until the end
-of the file is reached.  The *infile* pointer will usually point to
-``stdin`` or the input file given with the ``-in`` command line flag.
+ This will read lines from *infile*, parse and execute them until the end
+ of the file is reached.  The *infile* pointer will usually point to
+ ``stdin`` or the input file given with the ``-in`` command line flag.
 
-\endverbatim */
+ \endverbatim */
 
 void Input::file()
 {
@@ -282,17 +282,17 @@ void Input::file()
 
 /** Process all input from the file *filename*
  *
-\verbatim embed:rst
+ \verbatim embed:rst
 
-This function opens the file at the path *filename*, put the current
-file pointer stored in *infile* on a stack and instead assign *infile*
-with the newly opened file pointer.  Then it will call the
-:cpp:func:`Input::file() <LAMMPS_NS::Input::file()>` function to read,
-parse and execute the contents of that file.  When the end of the file
-is reached, it is closed and the previous file pointer from the infile
-file pointer stack restored to *infile*.
+ This function opens the file at the path *filename*, put the current
+ file pointer stored in *infile* on a stack and instead assign *infile*
+ with the newly opened file pointer.  Then it will call the
+ :cpp:func:`Input::file() <LAMMPS_NS::Input::file()>` function to read,
+ parse and execute the contents of that file.  When the end of the file
+ is reached, it is closed and the previous file pointer from the infile
+ file pointer stack restored to *infile*.
 
-\endverbatim
+ \endverbatim
  *
  * \param  filename  name of file with LAMMPS commands */
 
@@ -309,7 +309,7 @@ void Input::file(const char *filename)
     infile = fopen(filename,"r");
     if (infile == nullptr)
       error->one(FLERR,"Cannot open input script {}: {}",
-                                   filename, utils::getsyserror());
+		 filename, utils::getsyserror());
 
     infiles[nfile++] = infile;
   }
@@ -327,14 +327,14 @@ void Input::file(const char *filename)
 
 /** Process a single command from a string in *single*
  *
-\verbatim embed:rst
+ \verbatim embed:rst
 
-This function takes the text in *single*, makes a copy, parses that,
-executes the command and returns the name of the command (without the
-arguments).  If there was no command in *single* it will return
-``nullptr``.
+ This function takes the text in *single*, makes a copy, parses that,
+ executes the command and returns the name of the command (without the
+ arguments).  If there was no command in *single* it will return
+ ``nullptr``.
 
-\endverbatim
+ \endverbatim
  *
  * \param  single  string with LAMMPS command
  * \return         string with name of the parsed command w/o arguments */
@@ -372,7 +372,7 @@ char *Input::one(const std::string &single)
 
 /* ----------------------------------------------------------------------
    Send text to active echo file pointers
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 void Input::write_echo(const std::string &txt)
 {
   if (me == 0) {
@@ -389,7 +389,7 @@ void Input::write_echo(const std::string &txt)
    narg = # of args
    arg[] = individual args
    treat text between single/double/triple quotes as one arg via nextword()
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 void Input::parse()
 {
@@ -477,7 +477,7 @@ void Input::parse()
    strip quotes from returned word
    return ptr to start of word or null pointer if no word in string
    also return next = ptr after word
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 char *Input::nextword(char *str, char **next)
 {
@@ -528,7 +528,7 @@ char *Input::nextword(char *str, char **next)
    reallocate str/str2 to hold expanded version if necessary & reset max/max2
    print updated string if flag is set and not searching for label
    label_active will be 0 if called from external class
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 void Input::substitute(char *&str, char *&str2, int &max, int &max2, int flag)
 {
@@ -571,7 +571,7 @@ void Input::substitute(char *&str, char *&str2, int &max, int &max2, int flag)
         beyond = ptr + strlen(var) + 3;
         value = variable->retrieve(var);
 
-      // immediate variable between parenthesis, e.g. $(1/3) or $(1/3:%.6g)
+	// immediate variable between parenthesis, e.g. $(1/3) or $(1/3:%.6g)
 
       } else if (*(ptr+1) == '(') {
         var = ptr+2;
@@ -608,7 +608,7 @@ void Input::substitute(char *&str, char *&str2, int &max, int &max2, int flag)
         snprintf(immediate,256,fmtstr,variable->compute_equal(var));
         value = immediate;
 
-      // single character variable name, e.g. $a
+	// single character variable name, e.g. $a
 
       } else {
         var = ptr;
@@ -677,7 +677,7 @@ void Input::substitute(char *&str, char *&str2, int &max, int &max2, int flag)
 
 /* ----------------------------------------------------------------------
    return number of triple quotes in line
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 int Input::numtriple(char *line)
 {
@@ -694,7 +694,7 @@ int Input::numtriple(char *line)
    rellocate a string
    if n > 0: set max >= n in increments of DELTALINE
    if n = 0: just increment max by DELTALINE
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 void Input::reallocate(char *&str, int &max, int n)
 {
@@ -708,7 +708,7 @@ void Input::reallocate(char *&str, int &max, int n)
 /* ----------------------------------------------------------------------
    process a single parsed command
    return 0 if successful, -1 if did not recognize command
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 int Input::execute_command()
 {
@@ -728,7 +728,6 @@ int Input::execute_command()
   else if (!strcmp(command,"quit")) quit();
   else if (!strcmp(command,"shell")) shell();
   else if (!strcmp(command,"variable")) variable_command();
-
   else if (!strcmp(command,"angle_coeff")) angle_coeff();
   else if (!strcmp(command,"angle_style")) angle_style();
   else if (!strcmp(command,"atom_modify")) atom_modify();
@@ -784,6 +783,7 @@ int Input::execute_command()
   else if (!strcmp(command,"undump")) undump();
   else if (!strcmp(command,"unfix")) unfix();
   else if (!strcmp(command,"units")) units();
+  //else if (!strcmp(command,"pair_qcp")) qtcorpot();
 
   else flag = 0;
 
@@ -1018,7 +1018,7 @@ void Input::jump()
       infile = fopen(arg[0],"r");
       if (infile == nullptr)
         error->one(FLERR,"Cannot open input script {}: {}",
-                                     arg[0], utils::getsyserror());
+		   arg[0], utils::getsyserror());
 
       infiles[nfile-1] = infile;
     }
@@ -1060,7 +1060,7 @@ void Input::log()
 
       if (logfile == nullptr)
         error->one(FLERR,"Cannot open logfile {}: {}",
-                                     arg[0], utils::getsyserror());
+		   arg[0], utils::getsyserror());
 
     }
     if (universe->nworlds == 1) universe->ulogfile = logfile;
@@ -1251,7 +1251,7 @@ void Input::shell()
                        arg[i], utils::getsyserror());
     }
 
-  // concat arguments and invoke string in shell via system()
+    // concat arguments and invoke string in shell via system()
 
   } else {
     if (me == 0) {
@@ -1280,7 +1280,7 @@ void Input::variable_command()
 
 /* ----------------------------------------------------------------------
    one function for each LAMMPS-specific input script command
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 /* ---------------------------------------------------------------------- */
 
@@ -1655,7 +1655,7 @@ void Input::package()
     for (int i = 1; i < narg; i++) fixcmd += std::string(" ") + arg[i];
     modify->add_fix(fixcmd);
 
- } else if (strcmp(arg[0],"intel") == 0) {
+  } else if (strcmp(arg[0],"intel") == 0) {
     if (!modify->check_package("INTEL"))
       error->all(FLERR,
                  "Package intel command without INTEL package installed");
@@ -1676,7 +1676,7 @@ void Input::pair_coeff()
   if (force->pair == nullptr)
     error->all(FLERR,"Pair_coeff command before pair_style is defined");
   if ((narg < 2) || (force->pair->one_coeff && ((strcmp(arg[0],"*") != 0)
-                                               || (strcmp(arg[1],"*") != 0))))
+						|| (strcmp(arg[1],"*") != 0))))
     error->all(FLERR,"Incorrect args for pair coefficients");
   force->pair->coeff(narg,arg);
 }
@@ -1693,7 +1693,7 @@ void Input::pair_modify()
 /* ----------------------------------------------------------------------
    if old pair style exists and new style is same, just change settings
    else create new pair class
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 void Input::pair_style()
 {
@@ -1917,3 +1917,18 @@ void Input::units()
     error->all(FLERR,"Units command after simulation box is defined");
   update->set_units(arg[0]);
 }
+
+/*
+void Input::qtcorpot() {
+  //std::cout << "qtcorpot passed\n";
+  if (domain->box_exist == 0)
+    error->all(FLERR,"Quantum corrected potential command before simulation box is defined");
+  if (force->pair == nullptr)
+    error->all(FLERR,"Quantum corrected potential command before pair_style is defined");
+  if ((narg < 2) || (force->pair->one_coeff && ((strcmp(arg[0],"*") != 0)
+						|| (strcmp(arg[1],"*") != 0))))
+    error->all(FLERR,"Incorrect args for quantum corrected potential coefficients");
+  force->pair->coeff(narg,arg);
+    //(void)
+    }
+*/
