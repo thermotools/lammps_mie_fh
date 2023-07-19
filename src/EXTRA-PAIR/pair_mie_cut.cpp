@@ -34,8 +34,8 @@
 #include <cmath>
 #include <cstring>
 
-#define Q1(l) (l * (l-1))                         //  λ(λ − 1),
-#define Q2(l) ((l+2)*(l+1)*(l)*(l-1)*(.5))   //  (λ + 2)(λ + 1)λ(λ − 1)(0.5)
+//#define Q1(l) (l * (l-1))                         //  λ(λ − 1),
+//#define Q2(l) ((l+2)*(l+1)*(l)*(l-1)*(.5))   //  (λ + 2)(λ + 1)λ(λ − 1)(0.5)
 
 using namespace LAMMPS_NS;
 using namespace MathConst;
@@ -52,6 +52,13 @@ PairMIECut::PairMIECut(LAMMPS *lmp) : Pair(lmp),
   cut_respa = nullptr;
 }
 
+double PairMIECut::Q1(double l) {
+  return (l * (l-1));  
+}
+
+double PairMIECut::Q2(double l) {
+  return  ((l+2)*(l+1)*(l)*(l-1)*(.5));  
+}
 
 //Kb{1.380649 * pow(10,-23)},
 //h_bar{(6.62607015 * pow(10,-34)) / (2 * 3.14159265)}
@@ -94,6 +101,11 @@ PairMIECut::~PairMIECut()
 void PairMIECut::compute(int eflag, int vflag)
 {
   //std::cout << "PairMIEcut Compute called.\n\n";
+
+  //utils::logmesg(lmp, "Pair Mie Cut Compute \n\n");
+
+  //utils::logmesg(lmp, "Force..\n");
+  //std::string force_log;
   
   int i,j,ii,jj,inum,jnum,itype,jtype;
   double xtmp,ytmp,ztmp,delx,dely,delz,evdwl,fpair;
@@ -144,18 +156,20 @@ void PairMIECut::compute(int eflag, int vflag)
 	r2inv = 1.0/rsq;
 	rgamA = pow(r2inv,(gamA[itype][jtype]/2.0)); // pow(base,pow)
 	rgamR = pow(r2inv,(gamR[itype][jtype]/2.0));
+	
+	//double forcemie_1 =  (mie1[itype][jtype]*rgamR - mie2[itype][jtype]*rgamA);
 
-	/*
-	double forcemie_1 =  (mie1[itype][jtype]*rgamR - mie2[itype][jtype]*rgamA);
-
-	std::cout << "Focemie 1 = " << forcemie_1 << "\n";
-	*/
-
+	//utils::logmesg(lmp, std::string(fmt::format("forcemie_1 {}\n", forcemie_1)));
+	
 	forcemie = (mie1[itype][jtype] * rgamA) - (mie2[itype][jtype] * rgamR) 
 	  + (mie5[itype][jtype] * rgamA * r2inv) - (mie6[itype][jtype] * rgamR * r2inv)	
 	  + (mie9[itype][jtype] * rgamA * pow(r2inv,2)) - (mie10[itype][jtype] * rgamR * pow(r2inv,2));
 	
+	//utils::logmesg(lmp, std::string(fmt::format("forcemie {}\n", forcemie)));
+
 	// std::cout << "Focemie 2 = " << forcemie << "\n";
+	//force_log = fmt::format("{}\n", forcemie);
+	//utils::logmesg(lmp, force_log);
 	
 	fpair = factor_mie*forcemie*r2inv;
 
@@ -168,26 +182,22 @@ void PairMIECut::compute(int eflag, int vflag)
 	  f[j][2] -= delz*fpair;
 	}
 
-	if (eflag) {
-
-	  /*
-	  double evdwl_1 = (mie3[itype][jtype]*rgamR - mie4[itype][jtype]*rgamA) -
-	    offset[itype][jtype];
-	     
-	  std::cout << "edwl_1 = " << evdwl_1 << "\n";
-	  */
-	  
+	/*
+	  if (eflag) {
 	  evdwl = (mie3[itype][jtype] * rgamR) - (mie4[itype][jtype] * rgamA) 
-	    + (mie7[itype][jtype] * rgamR * r2inv) - (mie8[itype][jtype] * rgamA * r2inv) 
-	    + (mie11[itype][jtype] * rgamR * pow(r2inv,2)) - (mie12[itype][jtype] * rgamA * pow(r2inv,2))
-	    - offset[itype][jtype];
-
-	  //std::cout << "edwl = " << evdwl << "\n";
+	  + (mie7[itype][jtype] * rgamR * r2inv) - (mie8[itype][jtype] * rgamA * r2inv) 
+	  + (mie11[itype][jtype] * rgamR * pow(r2inv,2)) - (mie12[itype][jtype] * rgamA * pow(r2inv,2))
+	  - offset[itype][jtype];
 	  
-
 	  evdwl *= factor_mie;
-	  //evdwl = (double)0.1;
-	}
+	  }
+	*/
+
+	if (eflag) {
+          evdwl = (mie3[itype][jtype]*rgamR - mie4[itype][jtype]*rgamA) -
+            offset[itype][jtype];
+          evdwl *= factor_mie;
+        }
 
 	if (evflag) ev_tally(i,j,nlocal,newton_pair,evdwl,0.0,fpair,delx,dely,delz);
       }
@@ -203,7 +213,8 @@ void PairMIECut::compute(int eflag, int vflag)
 void PairMIECut::compute_inner()
 {
   //std::cout << "PairMieCut Compute Inner called.\n\n";
-
+  utils::logmesg(lmp, "Pair Mie Cut Compute inner \n\n");
+  
   int i,j,ii,jj,inum,jnum,itype,jtype;
   double xtmp,ytmp,ztmp,delx,dely,delz,fpair;
   double rsq,r2inv,rgamR,rgamA,forcemie,factor_mie,rsw;
@@ -254,9 +265,15 @@ void PairMIECut::compute_inner()
         r2inv = 1.0/rsq;
         rgamA = pow(r2inv,(gamA[itype][jtype]/2.0));
         rgamR = pow(r2inv,(gamR[itype][jtype]/2.0));
-        forcemie =  (mie1[itype][jtype]*rgamR - mie2[itype][jtype]*rgamA);
-        fpair = factor_mie*forcemie*r2inv;
-        if (rsq > cut_out_on_sq) {
+        //forcemie =  (mie1[itype][jtype]*rgamR - mie2[itype][jtype]*rgamA);
+	
+	forcemie = (mie1[itype][jtype] * rgamA) - (mie2[itype][jtype] * rgamR) 
+	  + (mie5[itype][jtype] * rgamA * r2inv) - (mie6[itype][jtype] * rgamR * r2inv)	
+	  + (mie9[itype][jtype] * rgamA * pow(r2inv,2)) - (mie10[itype][jtype] * rgamR * pow(r2inv,2));
+
+	fpair = factor_mie*forcemie*r2inv;
+	
+	if (rsq > cut_out_on_sq) {
           rsw = (sqrt(rsq) - cut_out_on)/cut_out_diff;
           fpair *= 1.0 - rsw*rsw*(3.0 - 2.0*rsw);
         }
@@ -279,6 +296,7 @@ void PairMIECut::compute_inner()
 void PairMIECut::compute_middle()
 {
   //std::cout << "PairMieCut compute middle called.\n\n";
+  //utils::logmesg(lmp, "Pair Mie Cut Compute middle \n\n");
 
   int i,j,ii,jj,inum,jnum,itype,jtype;
   double xtmp,ytmp,ztmp,delx,dely,delz,fpair;
@@ -335,8 +353,14 @@ void PairMIECut::compute_middle()
         r2inv = 1.0/rsq;
         rgamA = pow(r2inv,(gamA[itype][jtype]/2.0));
         rgamR = pow(r2inv,(gamR[itype][jtype]/2.0));
-        forcemie =  (mie1[itype][jtype]*rgamR - mie2[itype][jtype]*rgamA);
-        fpair = factor_mie*forcemie*r2inv;
+
+	//forcemie =  (mie1[itype][jtype]*rgamR - mie2[itype][jtype]*rgamA);
+
+	forcemie = (mie1[itype][jtype] * rgamA) - (mie2[itype][jtype] * rgamR) 
+	  + (mie5[itype][jtype] * rgamA * r2inv) - (mie6[itype][jtype] * rgamR * r2inv)	
+	  + (mie9[itype][jtype] * rgamA * pow(r2inv,2)) - (mie10[itype][jtype] * rgamR * pow(r2inv,2));
+
+	fpair = factor_mie*forcemie*r2inv;
         if (rsq < cut_in_on_sq) {
           rsw = (sqrt(rsq) - cut_in_off)/cut_in_diff;
           fpair *= rsw*rsw*(3.0 - 2.0*rsw);
@@ -364,6 +388,8 @@ void PairMIECut::compute_middle()
 void PairMIECut::compute_outer(int eflag, int vflag)
 {
   //std::cout << "PairMie compute outer called.\n\n";
+
+  utils::logmesg(lmp, "Pair Mie Cut Compute outer \n\n");
   
   int i,j,ii,jj,inum,jnum,itype,jtype;
   double xtmp,ytmp,ztmp,delx,dely,delz,evdwl,fpair;
@@ -419,8 +445,14 @@ void PairMIECut::compute_outer(int eflag, int vflag)
 	  r2inv = 1.0/rsq;
 	  rgamA = pow(r2inv,(gamA[itype][jtype]/2.0));
 	  rgamR = pow(r2inv,(gamR[itype][jtype]/2.0));
-	  forcemie =  (mie1[itype][jtype]*rgamR - mie2[itype][jtype]*rgamA);
-          fpair = factor_mie*forcemie*r2inv;
+
+	  //forcemie =  (mie1[itype][jtype]*rgamR - mie2[itype][jtype]*rgamA);
+	  
+	  forcemie = (mie1[itype][jtype] * rgamA) - (mie2[itype][jtype] * rgamR) 
+	    + (mie5[itype][jtype] * rgamA * r2inv) - (mie6[itype][jtype] * rgamR * r2inv)	
+	    + (mie9[itype][jtype] * rgamA * pow(r2inv,2)) - (mie10[itype][jtype] * rgamR * pow(r2inv,2));
+
+	  fpair = factor_mie*forcemie*r2inv;
           if (rsq < cut_in_on_sq) {
             rsw = (sqrt(rsq) - cut_in_off)/cut_in_diff;
             fpair *= rsw*rsw*(3.0 - 2.0*rsw);
@@ -440,9 +472,16 @@ void PairMIECut::compute_outer(int eflag, int vflag)
           r2inv = 1.0/rsq;
 	  rgamA = pow(r2inv,(gamA[itype][jtype]/2.0));
 	  rgamR = pow(r2inv,(gamR[itype][jtype]/2.0));
-          evdwl = (mie3[itype][jtype]*rgamR - mie4[itype][jtype]*rgamA) -
-            offset[itype][jtype];
-          evdwl *= factor_mie;
+
+	  //evdwl = (mie3[itype][jtype]*rgamR - mie4[itype][jtype]*rgamA) -
+          //  offset[itype][jtype];
+
+	  evdwl = (mie3[itype][jtype] * rgamR) - (mie4[itype][jtype] * rgamA) 
+	    + (mie7[itype][jtype] * rgamR * r2inv) - (mie8[itype][jtype] * rgamA * r2inv) 
+	    + (mie11[itype][jtype] * rgamR * pow(r2inv,2)) - (mie12[itype][jtype] * rgamA * pow(r2inv,2))
+	    - offset[itype][jtype];
+	  
+	  evdwl *= factor_mie;
         }
 
         if (vflag) {
@@ -450,8 +489,12 @@ void PairMIECut::compute_outer(int eflag, int vflag)
 	    r2inv = 1.0/rsq;
 	    rgamA = pow(r2inv,(gamA[itype][jtype]/2.0));
 	    rgamR = pow(r2inv,(gamR[itype][jtype]/2.0));
-	    forcemie =  (mie1[itype][jtype]*rgamR - mie2[itype][jtype]*rgamA);
-            fpair = factor_mie*forcemie*r2inv;
+
+	    //forcemie =  (mie1[itype][jtype]*rgamR - mie2[itype][jtype]*rgamA);
+	    forcemie = (mie1[itype][jtype] * rgamA) - (mie2[itype][jtype] * rgamR) 
+	      + (mie5[itype][jtype] * rgamA * r2inv) - (mie6[itype][jtype] * rgamR * r2inv)	
+	      + (mie9[itype][jtype] * rgamA * pow(r2inv,2)) - (mie10[itype][jtype] * rgamR * pow(r2inv,2));
+	    fpair = factor_mie*forcemie*r2inv;
           } else if (rsq < cut_in_on_sq)
             fpair = factor_mie*forcemie*r2inv;
         }
@@ -638,7 +681,8 @@ double PairMIECut::init_one(int i, int j)
   */
 
   //qtemp[i][j] = 3.3472e-27;
-  double Beta = pow((Kb*qtemp[i][j]),-1);
+  //double Beta = pow((Kb*qtemp[i][j]),-1);
+  double Beta = double(1/(Kb*qtemp[i][j]));
   
   //double D  = (Beta*pow(h_bar,2)) / (12 * atom->mass[i] * pow(sigma[i][j],2));
 
@@ -647,13 +691,14 @@ double PairMIECut::init_one(int i, int j)
     we need to divide the (grams/mol)/(atoms in one mol), and our new D would
     be calculated as follows. Avogadro's nr mul. by 1000 to convert mass into
     kgs and not in grams.
-   */
+  */
 
   //#-todo- declare Avogadro's number before using.
   if (strcmp("real", update->unit_style)==0)
     {
       printf("The unit style is %s\n", update->unit_style);
     }
+
   double mass_of_atom = (atom->mass[i])/(6.022e23 * 1000); // div by Avogadro's nr.
   double D  = (Beta*pow(h_bar,2)) / (12 * mass_of_atom * pow(sigma[i][j],2));
 
@@ -672,20 +717,22 @@ double PairMIECut::init_one(int i, int j)
   mie11[i][j] = Cmie[i][j] * epsilon[i][j] * Q2(gamR[i][j]) * D * D * pow(sigma[i][j],(gamR[i][j]+4));
   mie12[i][j] = Cmie[i][j] * epsilon[i][j] * Q2(gamA[i][j]) * D * D * pow(sigma[i][j],(gamA[i][j]+4));
   
-  /*
+ 
   //printf("The value of Mie12 is :%f\n", mie12[i][j]);
   //fwrite(&D,sizeof(double),1,fp);
-  //FILE *ulogfile = universe->ulogfile;
-  //if (universe->ulogfile) fmt::print(universe->ulogfile, "somexyz somexyz");
+
+  /*
+    FILE *ulogfile = universe->ulogfile;
+    if (universe->ulogfile) fmt::print(universe->ulogfile, "somexyz somexyz");
   */
   /*
-  std::string printit = fmt::format("Mass of an atom in kgs {}\n", mass_of_atom);
-  printit += fmt::format(" The value of D is {}\n", D);
-  printit += fmt::format ("mie5:{} mie6:{} mie7:{} mie8:{}\n",  mie5[i][j],mie6[i][j],mie7[i][j],mie8[i][j]);
-  printit += fmt::format ("mie9:{} mie10:{} mie11:{} mie12:{}\n",mie9[i][j],mie10[i][j],mie11[i][j],mie12[i][j]);
-  utils::logmesg(lmp, printit);
-  //utils::logmesg(lmp,"somexyz somexyz...\n");
+    std::string printit = fmt::format("Mass of an atom in kgs {}\n", mass_of_atom);
+    printit += fmt::format(" The value of D is {}\n", D);
+    printit += fmt::format ("mie5:{} mie6:{} mie7:{} mie8:{}\n",  mie5[i][j],mie6[i][j],mie7[i][j],mie8[i][j]);
+    printit += fmt::format ("mie9:{} mie10:{} mie11:{} mie12:{}\n",mie9[i][j],mie10[i][j],mie11[i][j],mie12[i][j]);
+    utils::logmesg(lmp, printit);
   */
+  //utils::logmesg(lmp,"somexyz somexyz...\n");
   
   if (offset_flag && (cut[i][j] > 0.0)) {
     double ratio = sigma[i][j] / cut[i][j];
@@ -848,7 +895,13 @@ double PairMIECut::single(int /*i*/, int /*j*/, int itype, int jtype, double rsq
   r2inv = 1.0/rsq;
   rgamA = pow(r2inv,(gamA[itype][jtype]/2.0));
   rgamR = pow(r2inv,(gamR[itype][jtype]/2.0));
-  forcemie =  (mie1[itype][jtype]*rgamR - mie2[itype][jtype]*rgamA);
+
+  //forcemie =  (mie1[itype][jtype]*rgamR - mie2[itype][jtype]*rgamA);
+  
+  forcemie = (mie1[itype][jtype] * rgamA) - (mie2[itype][jtype] * rgamR) 
+    + (mie5[itype][jtype] * rgamA * r2inv) - (mie6[itype][jtype] * rgamR * r2inv)	
+    + (mie9[itype][jtype] * rgamA * pow(r2inv,2)) - (mie10[itype][jtype] * rgamR * pow(r2inv,2));
+  
   fforce = factor_mie*forcemie*r2inv;
 
   phimie = (mie3[itype][jtype]*rgamR - mie4[itype][jtype]*rgamA) -
@@ -871,9 +924,9 @@ void *PairMIECut::extract(const char *str, int &dim)
 }
 
 /*string PairMIECut::Printstr() const
-{
+  {
   //print variables for debugging
   ostringstream os;
   os << D << mei
-}
+  }
 */
