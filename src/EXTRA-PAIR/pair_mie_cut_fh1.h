@@ -39,7 +39,6 @@ namespace LAMMPS_NS {
     void read_restart_settings(FILE *) override;
     double single(int, int, int, int, double, double, double, double &) override;
     void *extract(const char *, int &) override;
-
     void compute_inner() override;
     void compute_middle() override;
     void compute_outer(int, int) override;
@@ -51,21 +50,11 @@ namespace LAMMPS_NS {
     double **gamR, **gamA, **Cmie;
     double **mie1, **mie2, **mie3, **mie4, **offset;
     double *cut_respa;
- 
-    /*!
-      Quantum Corrected Pair Potential modifications
-    */
+    //Quantum Corrected Pair Potential modifications
     double **mie5, **mie6, **mie7, **mie8;
     double **mie9, **mie10, **mie11, **mie12;
-    double quant_temp{0};	// reads args coeff
-    double **qtemp{nullptr};    // sets qtemp
-    //double **D{nullptr};	// D(i,j) in Mie-FHqc, Mie feynman-hibbs quantumn corrections
-    //double **Q1{nullptr};	// Q1 in Mie-FHqc,
-    //double **Q2{nullptr};	// Q2 in Mie-FHqc, 
- 
-    const double Kb;            // Boltzmann constant
-    const double h_bar;         // reduced planck const.
-  
+    double quant_temp{0};      
+    double **qtemp{nullptr};
     void allocate();
   };
 
