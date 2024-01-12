@@ -1,8 +1,8 @@
-#Running example of Mie-FH2 ( Mie-cut) with NpT simulations
+#Running example of Mie-FH1 with NpT simulations
 #Temperature of simulation: myT
 
 # 3d Mie hydrogen test
-variable 	myT equal varmyT
+variable 	myT equal 30.0
 variable 	myP equal 1.0
 
 
@@ -33,9 +33,8 @@ pair_modify tail yes
 #neigh_modify	delay 0 every 20 check no
 
 thermo_style custom step temp pe etotal press density atoms vol
-thermo 100
+thermo 10
 #fix		1 all nve
 fix 1 all npt temp ${myT} ${myT} 10.0 iso ${myP} ${myP} 100.0
 
-run		10000
-￼
+run		1000
