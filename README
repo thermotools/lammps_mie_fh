@@ -1,3 +1,3 @@
 # Feynman-Hibbs Corrected Mie Pair Potential for LAMMPS
 
-> This repository contains an extension for the Large-scale Atomic/Molecular Massively Parallel Simulator (LAMMPS) that implements a Feynman-Hibbs corrected Mie pair potential. The purpose of this extension is to provide an accurate and efficient way to model interactions between particles in systems where the Mie potential is applicable, such as colloidal suspensions and polymer solutions.
+This repository contains an extension for the Large-scale Atomic/Molecular Massively Parallel Simulator (LAMMPS) that implements a Feynman-Hibbs corrected Mie pair potential. The purpose of this extension is to provide an accurate and efficient way to model interactions between particles in systems where the Mie potential is applicable, such as colloidal suspensions and polymer solutions.
