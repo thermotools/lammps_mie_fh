@@ -152,8 +152,6 @@ void PairMIECutFH1::compute(int eflag, int vflag)
 	  evdwl = (mie3[itype][jtype] * rgamR) - (mie4[itype][jtype] * rgamA)
 	    // First order correction
 	    + (mie7[itype][jtype] * rgamR * r2inv) - (mie8[itype][jtype] * rgamA * r2inv)
-	    // Second order correction
-	    //+ (mie11[itype][jtype] * rgamR * pow(r2inv,2)) - (mie12[itype][jtype] * rgamA * pow(r2inv,2))
 	    // Shift
 	    - offset[itype][jtype];
 
@@ -229,9 +227,7 @@ void PairMIECutFH1::compute_inner()
 	forcemie = (mie1[itype][jtype] * rgamA) - (mie2[itype][jtype] * rgamR)
 	  // First order correction
 	  + (mie5[itype][jtype] * rgamA * r2inv) - (mie6[itype][jtype] * rgamR * r2inv);
-	// Second order correction
-	//+ (mie9[itype][jtype] * rgamA * pow(r2inv,2)) - (mie10[itype][jtype] * rgamR * pow(r2inv,2));
-
+    
 	fpair = factor_mie*forcemie*r2inv;
 
 	if (rsq > cut_out_on_sq) {
@@ -256,8 +252,6 @@ void PairMIECutFH1::compute_inner()
 
 void PairMIECutFH1::compute_middle()
 {
-  //utils::logmesg(lmp, "Pair Mie Cut Compute middle \n\n");
-
   int i,j,ii,jj,inum,jnum,itype,jtype;
   double xtmp,ytmp,ztmp,delx,dely,delz,fpair;
   double rsq,r2inv,rgamR,rgamA,forcemie,factor_mie,rsw;
@@ -317,9 +311,7 @@ void PairMIECutFH1::compute_middle()
 	forcemie = (mie1[itype][jtype] * rgamA) - (mie2[itype][jtype] * rgamR)
 	  // First order correction
 	  + (mie5[itype][jtype] * rgamA * r2inv) - (mie6[itype][jtype] * rgamR * r2inv);
-	// Second order correction
-	//+ (mie9[itype][jtype] * rgamA * pow(r2inv,2)) - (mie10[itype][jtype] * rgamR * pow(r2inv,2));
-
+	
 	fpair = factor_mie*forcemie*r2inv;
 	if (rsq < cut_in_on_sq) {
 	  rsw = (sqrt(rsq) - cut_in_off)/cut_in_diff;
@@ -407,8 +399,6 @@ void PairMIECutFH1::compute_outer(int eflag, int vflag)
 	  forcemie = (mie1[itype][jtype] * rgamA) - (mie2[itype][jtype] * rgamR)
 	    // First order correction
 	    + (mie5[itype][jtype] * rgamA * r2inv) - (mie6[itype][jtype] * rgamR * r2inv);
-	  // Second order correction
-	  //+ (mie9[itype][jtype] * rgamA * pow(r2inv,2)) - (mie10[itype][jtype] * rgamR * pow(r2inv,2));
 
 	  fpair = factor_mie*forcemie*r2inv;
 	  if (rsq < cut_in_on_sq) {
@@ -434,8 +424,7 @@ void PairMIECutFH1::compute_outer(int eflag, int vflag)
 	  evdwl = (mie3[itype][jtype] * rgamR) - (mie4[itype][jtype] * rgamA)
 	    // First order correction
 	    + (mie7[itype][jtype] * rgamR * r2inv) - (mie8[itype][jtype] * rgamA * r2inv)
-	    // Second order correction
-	    //+ (mie11[itype][jtype] * rgamR * pow(r2inv,2)) - (mie12[itype][jtype] * rgamA * pow(r2inv,2))
+	    
 	    // Shift
 	    - offset[itype][jtype];
 
@@ -451,8 +440,7 @@ void PairMIECutFH1::compute_outer(int eflag, int vflag)
 	    forcemie = (mie1[itype][jtype] * rgamA) - (mie2[itype][jtype] * rgamR)
 	      // Fisrt order correction
 	      + (mie5[itype][jtype] * rgamA * r2inv) - (mie6[itype][jtype] * rgamR * r2inv);
-	    // Second order correction
-	    //+ (mie9[itype][jtype] * rgamA * pow(r2inv,2)) - (mie10[itype][jtype] * rgamR * pow(r2inv,2));
+	    
 	    fpair = factor_mie*forcemie*r2inv;
 	  } else if (rsq < cut_in_on_sq)
 	    fpair = factor_mie*forcemie*r2inv;
@@ -597,52 +585,52 @@ double PairMIECutFH1::init_one(int i, int j)
   double Kb, h_bar, mconv, lconv, NA;
   double Beta, mass_of_atom, D;
 
-    if (strcmp(update->unit_style, "real") == 0) {
-      Kb = 1.380649e-23;
-      h_bar = 6.62607015e-34 / (2 * 3.14159265);
-      NA = 6.02214076e23;
-      lconv = 1e-10; // Angstrom -> m
-      mconv = 1e-3/NA; // grams/mole -> kg/particle    
-    } else if (strcmp(update->unit_style, "metal") == 0) {
-      Kb = 1.380649e-23;
-      h_bar = 6.62607015e-34 / (2 * 3.14159265);
-      NA = 6.02214076e23;
-      lconv = 1e-10;  // Angstrom -> m
-      mconv = 1e-3/NA; // grams/mole -> kg/mole
-    } else if (strcmp(update->unit_style, "si") == 0) {
-      Kb = 1.380649e-23;
-      h_bar = 6.62607015e-34 / (2 * 3.14159265);
-      NA = 6.02214076e23;
-      lconv = 1.0;
-      mconv = 1.0;
-    } else if (strcmp(update->unit_style, "cgs") == 0) {
-      Kb = 1.380649e-23;
-      h_bar = 6.62607015e-34 / (2 * 3.14159265);
-      NA = 6.02214076e23;
-      lconv = 1e-2; // centimeters -> m
-      mconv = 1e-3; // grams/particle -> kg/particle
-    } else if (strcmp(update->unit_style, "micro") == 0) {
-      Kb = 1.380649e-23;
-      h_bar = 6.62607015e-34 / (2 * 3.14159265);
-      NA = 6.02214076e23;
-      lconv = 1e-6;  // micro m -> m
-      mconv = 1e-12; // pico grams/particle -> kg/particle
-    } else if (strcmp(update->unit_style, "nano") == 0) {
-      Kb = 1.380649e-23;
-      h_bar = 6.62607015e-34 / (2 * 3.14159265);
-      NA = 6.02214076e23;
-      lconv = 1e-9; // nano m -> m
-      mconv = 1e-18; // atto grams/particle -> kg/particle
-    } else if (strcmp(update->unit_style, "lj") == 0) {
-      lconv = 1; // nano m -> m
-      mconv = 1; // atto grams/particle -> kg/particle
-      Kb = force->boltz;
-      h_bar = force->hplanck/MY_2PI;
-      NA = 1;
-    } else {
-      error->all(FLERR, "Unknown units {} for pair_mie_cut.",
-		 update->unit_style);
-    }
+  if (strcmp(update->unit_style, "real") == 0) {
+    Kb = 1.380649e-23;
+    h_bar = 6.62607015e-34 / (2 * 3.14159265);
+    NA = 6.02214076e23;
+    lconv = 1e-10; // Angstrom -> m
+    mconv = 1e-3/NA; // grams/mole -> kg/particle    
+  } else if (strcmp(update->unit_style, "metal") == 0) {
+    Kb = 1.380649e-23;
+    h_bar = 6.62607015e-34 / (2 * 3.14159265);
+    NA = 6.02214076e23;
+    lconv = 1e-10;  // Angstrom -> m
+    mconv = 1e-3/NA; // grams/mole -> kg/mole
+  } else if (strcmp(update->unit_style, "si") == 0) {
+    Kb = 1.380649e-23;
+    h_bar = 6.62607015e-34 / (2 * 3.14159265);
+    NA = 6.02214076e23;
+    lconv = 1.0;
+    mconv = 1.0;
+  } else if (strcmp(update->unit_style, "cgs") == 0) {
+    Kb = 1.380649e-23;
+    h_bar = 6.62607015e-34 / (2 * 3.14159265);
+    NA = 6.02214076e23;
+    lconv = 1e-2; // centimeters -> m
+    mconv = 1e-3; // grams/particle -> kg/particle
+  } else if (strcmp(update->unit_style, "micro") == 0) {
+    Kb = 1.380649e-23;
+    h_bar = 6.62607015e-34 / (2 * 3.14159265);
+    NA = 6.02214076e23;
+    lconv = 1e-6;  // micro m -> m
+    mconv = 1e-12; // pico grams/particle -> kg/particle
+  } else if (strcmp(update->unit_style, "nano") == 0) {
+    Kb = 1.380649e-23;
+    h_bar = 6.62607015e-34 / (2 * 3.14159265);
+    NA = 6.02214076e23;
+    lconv = 1e-9; // nano m -> m
+    mconv = 1e-18; // atto grams/particle -> kg/particle
+  } else if (strcmp(update->unit_style, "lj") == 0) {
+    lconv = 1; // nano m -> m
+    mconv = 1; // atto grams/particle -> kg/particle
+    Kb = force->boltz;
+    h_bar = force->hplanck/MY_2PI;
+    NA = 1;
+  } else {
+    error->all(FLERR, "Unknown units {} for pair_mie_cut.",
+	       update->unit_style);
+  }
     
   if (setflag[i][j] == 0) {
     epsilon[i][j] = mix_energy(epsilon[i][i],epsilon[j][j],
@@ -702,9 +690,7 @@ double PairMIECutFH1::init_one(int i, int j)
     // First order correction
     offset[i][j] += Cmie[i][j] * epsilon[i][j] * D *
       (Q1(gamR[i][j]) * pow(ratio,(gamR[i][j]+2)) - Q1(gamA[i][j]) * pow(ratio,(gamA[i][j]+2)));
-    // Second order correction
-    //offset[i][j] += Cmie[i][j] * epsilon[i][j] * D * D *
-    //  (Q2(gamR[i][j]) * pow(ratio,(gamR[i][j]+4)) - Q2(gamA[i][j]) * pow(ratio,(gamA[i][j]+4)));
+   
   } else offset[i][j] = 0.0;
   
   if (comm->me==0){
@@ -756,18 +742,13 @@ double PairMIECutFH1::init_one(int i, int j)
        // First order correction
        + D*sigma_rc_2*(Q1(gamR[i][j])*siggamR/((gamR[i][j]-1.0)*rcgamR)-
 		       Q1(gamA[i][j])*siggamA/((gamA[i][j]-1.0)*rcgamA)) );
-    // Second order correction
-    //+ pow(D*sigma_rc_2,2.0)*(Q2(gamR[i][j])*siggamR/((gamR[i][j]+1.0)*rcgamR)-
-    //				Q2(gamA[i][j])*siggamA/((gamA[i][j]+1.0)*rcgamA)) );
+    
     ptail_ij = Cmie[i][j]*2.0*MY_PI*all[0]*all[1]*epsilon[i][j]/3.0*
       ((gamR[i][j]/(gamR[i][j]-3.0))*siggamR/rcgamR-
        (gamA[i][j]/(gamA[i][j]-3.0))*siggamA/rcgamA
        // First order correction
        + D*sigma_rc_2*((Q1(gamR[i][j])*(gamR[i][j] + 2.0)/(gamR[i][j]-1.0))*siggamR/rcgamR-
 		       (Q1(gamA[i][j])*(gamA[i][j] + 2.0)/(gamA[i][j]-1.0))*siggamA/rcgamA) );
-    // Second order correction
-    //+ pow(D*sigma_rc_2,2.0)*((Q2(gamR[i][j])*(gamR[i][j] + 4.0)/(gamR[i][j]+1.0))*siggamR/rcgamR-
-    //(Q2(gamA[i][j])*(gamA[i][j] + 4.0)/(gamA[i][j]+1.0))*siggamA/rcgamA) );
   }
 
   return cut[i][j];
@@ -873,16 +854,13 @@ double PairMIECutFH1::single(int /*i*/, int /*j*/, int itype, int jtype, double 
   forcemie = (mie1[itype][jtype] * rgamR) - (mie2[itype][jtype] * rgamA)
     // First order correction
     + (mie5[itype][jtype] * rgamR * r2inv) - (mie6[itype][jtype] * rgamA * r2inv);
-  // Second order correction
-  //+ (mie9[itype][jtype] * rgamR * pow(r2inv,2)) - (mie10[itype][jtype] * rgamA * pow(r2inv,2));
-
+  
   fforce = factor_mie*forcemie*r2inv;
 
   phimie = (mie3[itype][jtype]*rgamR - mie4[itype][jtype]*rgamA)
     // First order correction
     + (mie7[itype][jtype] * rgamR * r2inv) - (mie8[itype][jtype] * rgamA * r2inv)
-    // Second order correction
-    //+ (mie11[itype][jtype] * rgamR * pow(r2inv,2.0)) - (mie12[itype][jtype] * rgamA * pow(r2inv,2.0))
+    
     // Shift
     - offset[itype][jtype];
 

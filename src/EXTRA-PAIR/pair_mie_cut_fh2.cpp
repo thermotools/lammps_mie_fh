@@ -592,6 +592,7 @@ double PairMIECutFH2::init_one(int i, int j)
 {
   double Kb, h_bar, mconv, lconv, NA;
   double Beta, mass_of_atom, D;
+
   if (strcmp(update->unit_style, "real") == 0) {
     Kb = 1.380649e-23;
     h_bar = 6.62607015e-34 / (2 * 3.14159265);
