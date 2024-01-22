@@ -158,7 +158,7 @@ void PairMIECutFH2::compute(int eflag, int vflag)
 	    - offset[itype][jtype];
 
 	  evdwl *= factor_mie;
-	  }
+	}
 
 	if (evflag) ev_tally(i,j,nlocal,newton_pair,evdwl,0.0,fpair,delx,dely,delz);
       }
@@ -590,12 +590,56 @@ void PairMIECutFH2::init_style()
 
 double PairMIECutFH2::init_one(int i, int j)
 {
-  const double Kb{1.380649e-23}; // Boltzmann const
-  const double h_bar{6.62607015e-34 / (2 * 3.14159265)}; // Reduced Planck const
-  const double NA{6.02214076e23}; // Avogadro's nr.
-  double mconv(1.0), lconv(1.0);
+  double Kb, h_bar, mconv, lconv, NA;
   double Beta, mass_of_atom, D;
 
+  if (strcmp(update->unit_style, "real") == 0) {
+    Kb = 1.380649e-23;
+    h_bar = 6.62607015e-34 / (2 * 3.14159265);
+    NA = 6.02214076e23;
+    lconv = 1e-10; // Angstrom -> m
+    mconv = 1e-3/NA; // grams/mole -> kg/particle    
+  } else if (strcmp(update->unit_style, "metal") == 0) {
+    Kb = 1.380649e-23;
+    h_bar = 6.62607015e-34 / (2 * 3.14159265);
+    NA = 6.02214076e23;
+    lconv = 1e-10;  // Angstrom -> m
+    mconv = 1e-3/NA; // grams/mole -> kg/mole
+  } else if (strcmp(update->unit_style, "si") == 0) {
+    Kb = 1.380649e-23;
+    h_bar = 6.62607015e-34 / (2 * 3.14159265);
+    NA = 6.02214076e23;
+    lconv = 1.0;
+    mconv = 1.0;
+  } else if (strcmp(update->unit_style, "cgs") == 0) {
+    Kb = 1.380649e-23;
+    h_bar = 6.62607015e-34 / (2 * 3.14159265);
+    NA = 6.02214076e23;
+    lconv = 1e-2; // centimeters -> m
+    mconv = 1e-3; // grams/particle -> kg/particle
+  } else if (strcmp(update->unit_style, "micro") == 0) {
+    Kb = 1.380649e-23;
+    h_bar = 6.62607015e-34 / (2 * 3.14159265);
+    NA = 6.02214076e23;
+    lconv = 1e-6;  // micro m -> m
+    mconv = 1e-12; // pico grams/particle -> kg/particle
+  } else if (strcmp(update->unit_style, "nano") == 0) {
+    Kb = 1.380649e-23;
+    h_bar = 6.62607015e-34 / (2 * 3.14159265);
+    NA = 6.02214076e23;
+    lconv = 1e-9; // nano m -> m
+    mconv = 1e-18; // atto grams/particle -> kg/particle
+  } else if (strcmp(update->unit_style, "lj") == 0) {
+    lconv = 1; // nano m -> m
+    mconv = 1; // atto grams/particle -> kg/particle
+    Kb = force->boltz;
+    h_bar = force->hplanck/MY_2PI;
+    NA = 1;
+  } else {
+    error->all(FLERR, "Unknown units {} for pair_mie_cut.",
+	       update->unit_style);
+  }
+ 
   if (setflag[i][j] == 0) {
     epsilon[i][j] = mix_energy(epsilon[i][i],epsilon[j][j],
 			       sigma[i][i],sigma[j][j]);
@@ -630,28 +674,6 @@ double PairMIECutFH2::init_one(int i, int j)
 	utils::logmesg(lmp,"\tUnit style: {}\n", update->unit_style);
       }
   }
-
-  if (strcmp(update->unit_style, "real") == 0) {
-    lconv = 1e-10; // Angstrom -> m
-    mconv = 1e-3/NA; // grams/mole -> kg/particle
-  } else if (strcmp(update->unit_style, "metal") == 0) {
-    lconv = 1e-10;  // Angstrom -> m
-    mconv = 1e-3/NA; // grams/mole -> kg/mole
-  } else if (strcmp(update->unit_style, "si") == 0) {
-    lconv = 1.0;
-    mconv = 1.0;
-  } else if (strcmp(update->unit_style, "cgs") == 0) {
-    lconv = 1e-2; // centimeters -> m
-    mconv = 1e-3; // grams/particle -> kg/particle
-  } else if (strcmp(update->unit_style, "micro") == 0) {
-    lconv = 1e-6;  // micro m -> m
-    mconv = 1e-12; // pico grams/particle -> kg/particle
-  } else if (strcmp(update->unit_style, "nano") == 0) {
-    lconv = 1e-9; // nano m -> m
-    mconv = 1e-18; // atto grams/particle -> kg/particle
-  } else
-    error->all(FLERR, "Unknown units {} for pair_mie_cut.",
-	       update->unit_style);
 
   mass_of_atom = atom->mass[i]*mconv;
   D  = (Beta*pow(h_bar,2)) / (12 * mass_of_atom * pow(sigma[i][j]*lconv,2));
@@ -837,8 +859,8 @@ void PairMIECutFH2::read_restart_settings(FILE *fp)
 /* ---------------------------------------------------------------------- */
 
 double PairMIECutFH2::single(int /*i*/, int /*j*/, int itype, int jtype, double rsq,
-			  double /*factor_coul*/, double factor_mie,
-			  double &fforce)
+			     double /*factor_coul*/, double factor_mie,
+			     double &fforce)
 {
   double r2inv,rgamR,rgamA,forcemie,phimie;
 
