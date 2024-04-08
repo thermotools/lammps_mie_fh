@@ -50,7 +50,6 @@ namespace LAMMPS_NS {
     double **gamR, **gamA, **Cmie;
     double **mie1, **mie2, **mie3, **mie4, **offset;
     double *cut_respa;
-    //Quantum Corrected Pair Potential modifications
     double **mie5, **mie6, **mie7, **mie8;
     double **mie9, **mie10, **mie11, **mie12;
     double quant_temp{0};      
@@ -58,7 +57,7 @@ namespace LAMMPS_NS {
     void allocate();
   };
 
-}				// namespace LAMMPS_NS
+} // namespace LAMMPS_NS
 
 #endif
 #endif
