@@ -50,7 +50,18 @@ Please cite the following papers when using this extension in your research:
 
 (**Aasen**) Aasen, A., Hammer, M., Ervik, Å., Müller, E. A., & Wilhelmsen, Ø. (2019). Equation of state and force fields for Feynman–Hibbs-corrected Mie fluids. I. Application to pure helium, neon, hydrogen, and deuterium. The Journal of Chemical Physics, 151(6).
 
-Our paper on the implementation and benchmarking is currently under submission. (More info will come)
+(**Trinh**) Trinh, Thuat T and Hammer, Morten and Sharma, Vishist and Wilhelmsen, Øivind (2024). Mie-FH: A quantum corrected pair potential in the LAMMPS simulation package for hydrogen mixtures. SoftwareX, 26, 101716.
+```{bibtex}
+@article{trinh2024mie,
+  title={Mie--FH: A quantum corrected pair potential in the LAMMPS simulation package for hydrogen mixtures},
+  author={Trinh, Thuat T and Hammer, Morten and Sharma, Vishist and Wilhelmsen, {\O}ivind},
+  journal={SoftwareX},
+  volume={26},
+  pages={101716},
+  year={2024},
+  publisher={Elsevier}
+}
+```
 
 
 If you have any questions or issues with this extension, please feel free to open an issue or contact the author directly.
